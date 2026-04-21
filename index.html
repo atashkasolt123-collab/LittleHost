@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+    <title>Spins | Мессенджер</title>
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+        body{background:#000;height:100vh;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;}
+        .app{height:100vh;background:#0f0f0f;display:flex;overflow:hidden;}
+        .sidebar{width:100%;max-width:360px;background:#111;border-right:1px solid #1f1f1f;display:flex;flex-direction:column;transition:transform .3s;z-index:100;}
+        .sidebar-header{padding:55px 20px 16px;background:linear-gradient(180deg,#111,#0f0f0f);}
+        .sidebar-header h1{font-size:34px;font-weight:700;background:linear-gradient(135deg,#fff,#6c6c6c);-webkit-background-clip:text;background-clip:text;color:transparent;}
+        .search-box{margin:12px 16px;background:#1e1e1e;border-radius:14px;padding:12px 16px;display:flex;gap:10px;position:relative;}
+        .search-box input{background:transparent;border:none;color:#fff;width:100%;outline:none;font-size:17px;}
+        .search-results{position:absolute;top:100%;left:0;right:0;background:#1e1e1e;border-radius:14px;margin-top:8px;z-index:200;max-height:350px;overflow-y:auto;display:none;box-shadow:0 8px 20px rgba(0,0,0,0.4);}
+        .search-results.active{display:block;}
+        .search-result-item{padding:14px 16px;cursor:pointer;color:#fff;font-size:16px;border-bottom:0.5px solid #2a2a2a;display:flex;align-items:center;gap:12px;}
+        .chat-list{flex:1;overflow-y:auto;padding:8px 12px;}
+        .chat-item{display:flex;align-items:center;gap:14px;padding:12px;border-radius:14px;margin-bottom:4px;cursor:pointer;}
+        .chat-item.active{background:#1e1e1e;}
+        .avatar-small{width:52px;height:52px;border-radius:50%;object-fit:cover;}
+        .chat-info{flex:1;}
+        .chat-name{font-weight:600;color:#fff;font-size:16px;display:flex;align-items:center;gap:6px;}
+        .chat-preview{font-size:13px;color:#8e8e8e;margin-top:2px;}
+        .create-btn{margin:8px 16px;background:#1e1e1e;border:none;padding:14px;border-radius:14px;color:#fff;font-weight:600;font-size:16px;cursor:pointer;}
+        .chat-area{flex:1;display:flex;flex-direction:column;background:#0f0f0f;}
+        .chat-header{padding:12px 16px;background:rgba(17,17,17,0.95);backdrop-filter:blur(20px);border-bottom:0.5px solid #1f1f1f;display:flex;justify-content:space-between;align-items:center;}
+        .chat-header-info{display:flex;align-items:center;gap:12px;flex:1;}
+        .back-btn{width:40px;height:40px;border-radius:50%;background:#1e1e1e;border:none;color:#fff;font-size:20px;cursor:pointer;display:none;}
+        .chat-header-avatar{width:44px;height:44px;border-radius:50%;}
+        .chat-header-title{font-weight:600;color:#fff;font-size:17px;}
+        .chat-header-status{font-size:13px;color:#6c6c6c;}
+        .messages-container{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:8px;}
+        .message{display:flex;gap:8px;max-width:85%;animation:fadeSlide .2s;}
+        .message.own{align-self:flex-end;flex-direction:row-reverse;}
+        .message-bubble{background:#1e1e1e;padding:10px 14px;border-radius:18px;color:#fff;}
+        .message.own .message-bubble{background:#2b5278;}
+        .message-time{font-size:10px;color:#6c6c6c;margin-top:4px;text-align:right;}
+        .input-area{padding:10px 16px;background:rgba(17,17,17,0.95);backdrop-filter:blur(20px);display:flex;gap:10px;align-items:center;border-top:0.5px solid #1f1f1f;}
+        .input-area input{flex:1;background:#1e1e1e;border:none;border-radius:24px;padding:12px 18px;color:#fff;font-size:16px;}
+        .icon-btn{width:44px;height:44px;border-radius:50%;background:#1e1e1e;border:none;color:#fff;font-size:22px;cursor:pointer;}
+        .right-panel{width:100%;max-width:380px;background:#111;border-left:1px solid #1f1f1f;overflow-y:auto;transition:transform .3s;z-index:100;}
+        .profile-header{background:linear-gradient(135deg,#1a1a1a,#111);padding:30px 20px;text-align:center;}
+        .profile-avatar{width:100px;height:100px;border-radius:50%;object-fit:cover;margin-bottom:16px;cursor:pointer;}
+        .profile-name{font-size:24px;font-weight:700;color:#fff;}
+        .settings-btn{width:100%;background:#1e1e1e;border:none;padding:14px;border-radius:14px;color:#fff;font-size:16px;cursor:pointer;margin-bottom:10px;}
+        .modal{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);backdrop-filter:blur(12px);display:flex;align-items:center;justify-content:center;z-index:1000;}
+        .modal-card{background:#1e1e1e;border-radius:24px;padding:24px;width:90%;max-width:340px;}
+        .modal-card h3{color:#fff;margin-bottom:16px;}
+        .modal-card input{width:100%;margin:8px 0;padding:14px;background:#2a2a2a;border:none;border-radius:14px;color:#fff;font-size:16px;}
+        .modal-card button{margin-top:12px;padding:14px;border-radius:14px;border:none;cursor:pointer;font-weight:600;width:100%;}
+        .toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:rgba(30,30,30,0.95);padding:12px 24px;border-radius:30px;color:#fff;z-index:1100;animation:fadeInOut 2s;}
+        .profile-mobile-btn{display:none;position:fixed;bottom:20px;right:20px;width:56px;height:56px;border-radius:50%;background:#2b5278;border:none;color:#fff;font-size:24px;cursor:pointer;z-index:300;align-items:center;justify-content:center;}
+        @keyframes fadeSlide{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+        @keyframes fadeInOut{0%{opacity:0;}15%{opacity:1;}85%{opacity:1;}100%{opacity:0;}}
+        @media (max-width:768px){
+            .sidebar{position:fixed;left:0;top:0;bottom:0;transform:translateX(-100%);}
+            .sidebar.open{transform:translateX(0);}
+            .right-panel{position:fixed;right:0;top:0;bottom:0;transform:translateX(100%);}
+            .right-panel.open{transform:translateX(0);}
+            .back-btn{display:flex;}
+            .profile-mobile-btn{display:flex;}
+            .message{max-width:90%;}
+        }
+    </style>
+</head>
+<body>
+<div id="root"></div>
+
+<script>
+// БАЗА ДАННЫХ
+let DB = {
+    users: JSON.parse(localStorage.getItem('spins_users')) || [],
+    chats: JSON.parse(localStorage.getItem('spins_chats')) || [],
+    messages: JSON.parse(localStorage.getItem('spins_messages')) || []
+};
+
+function saveDB() {
+    localStorage.setItem('spins_users', JSON.stringify(DB.users));
+    localStorage.setItem('spins_chats', JSON.stringify(DB.chats));
+    localStorage.setItem('spins_messages', JSON.stringify(DB.messages));
+}
+
+let currentUser = null;
+let activeChatId = null;
+
+function showToast(msg, isErr = false) {
+    let toast = document.createElement('div');
+    toast.className = 'toast';
+    toast.style.background = isErr ? '#c72a2a' : '#2a2a2a';
+    toast.textContent = msg;
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 2000);
+}
+
+// СОЗДАНИЕ АДМИНА
+if (!DB.users.find(u => u.username === 'SpinsAdmin')) {
+    DB.users.push({
+        uid: 'admin1',
+        username: 'SpinsAdmin',
+        password: 'admin123',
+        premium: true,
+        avatar: 'https://ui-avatars.com/api/?background=ffd700&color=000&bold=true&size=128&name=ADMIN',
+        bio: 'Администратор Spins'
+    });
+    saveDB();
+}
+
+function createChat(userA, userB) {
+    let existing = DB.chats.find(c => c.participants.includes(userA) && c.participants.includes(userB));
+    if (existing) return existing.id;
+    let newId = 'chat_' + Date.now();
+    DB.chats.push({ id: newId, participants: [userA, userB], lastMessage: null });
+    saveDB();
+    return newId;
+}
+
+function sendMessage(chatId, text) {
+    if (!text.trim()) return;
+    DB.messages.push({
+        id: Date.now(),
+        chatId: chatId,
+        senderId: currentUser.uid,
+        text: text.trim(),
+        time: Date.now()
+    });
+    let chat = DB.chats.find(c => c.id === chatId);
+    if (chat) chat.lastMessage = text.trim();
+    saveDB();
+    renderApp();
+    setTimeout(() => {
+        let container = document.querySelector('.messages-container');
+        if (container) container.scrollTop = container.scrollHeight;
+    }, 50);
+}
+
+function getMessages(chatId) {
+    return DB.messages.filter(m => m.chatId === chatId).sort((a,b) => a.time - b.time);
+}
+
+function getChatName(chat) {
+    let otherId = chat.participants.find(p => p !== currentUser.uid);
+    let other = DB.users.find(u => u.uid === otherId);
+    return other?.username || 'Unknown';
+}
+
+// ПРЕМИУМ
+function showPremium() {
+    let modal = document.createElement('div');
+    modal.className = 'modal';
+    modal.innerHTML = `
+        <div class="modal-card">
+            <h3>💎 Premium</h3>
+            <input type="text" id="cardNum" placeholder="Номер карты">
+            <input type="text" id="cardCvv" placeholder="CVV" maxlength="3">
+            <button id="payBtn">Оплатить</button>
+            <button id="closeBtn">Отмена</button>
+        </div>
+    `;
+    document.body.appendChild(modal);
+    document.getElementById('payBtn')?.onclick = () => {
+        let card = document.getElementById('cardNum').value.replace(/\s/g, '');
+        let cvv = document.getElementById('cardCvv').value;
+        if (card === '7777777777777777' && cvv === '123') {
+            currentUser.premium = true;
+            let idx = DB.users.findIndex(u => u.uid === currentUser.uid);
+            if (idx !== -1) DB.users[idx].premium = true;
+            saveDB();
+            showToast('Premium активирован!');
+            modal.remove();
+            renderApp();
+        } else {
+            showToast('Неверные данные', true);
+        }
+    };
+    document.getElementById('closeBtn')?.onclick = () => modal.remove();
+}
+
+function renderApp() {
+    let root = document.getElementById('root');
+    if (!currentUser) return;
+    
+    let userChats = DB.chats.filter(c => c.participants.includes(currentUser.uid));
+    let items = userChats.map(c => ({ id: c.id, name: getChatName(c), data: c }));
+    let activeMsgs = activeChatId ? getMessages(activeChatId) : [];
+    let activeChat = DB.chats.find(c => c.id === activeChatId);
+    
+    root.innerHTML = `
+        <div class="app">
+            <div class="sidebar" id="sidebar">
+                <div class="sidebar-header"><h1>Spins</h1></div>
+                <div class="search-box">
+                    <span>🔍</span>
+                    <input id="searchInput" placeholder="Поиск по username...">
+                    <div class="search-results" id="searchResults"></div>
+                </div>
+                <div class="chat-list" id="chatList"></div>
+                <button class="create-btn" id="newChatBtn">➕ Новый чат</button>
+            </div>
+            <div class="chat-area">
+                <div class="chat-header">
+                    <div class="chat-header-info">
+                        <button class="back-btn" id="backBtn">←</button>
+                        <button class="icon-btn" id="menuBtn" style="display:none;">☰</button>
+                        <img class="chat-header-avatar" src="https://ui-avatars.com/api/?background=2b5278&color=fff&size=128&name=${activeChat ? (getChatName(activeChat)?.charAt(0) || 'U') : 'S'}">
+                        <div>
+                            <div class="chat-header-title">${activeChat ? getChatName(activeChat) : 'Spins'}</div>
+                            <div class="chat-header-status">онлайн</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="messages-container" id="messagesList"></div>
+                <div class="input-area" id="inputArea"></div>
+            </div>
+            <div class="right-panel" id="rightPanel">
+                <div class="profile-header">
+                    <img class="profile-avatar" src="${currentUser.avatar}" id="avatarImg">
+                    <div class="profile-name">${currentUser.username} ${currentUser.premium ? '💎' : ''}</div>
+                    <div style="margin-top:8px; color:#8e8e8e;">${currentUser.bio || 'Нет описания'}</div>
+                </div>
+                <div style="padding:20px;">
+                    <button class="settings-btn" id="premiumBtn">💎 ${currentUser.premium ? 'Premium активен' : 'Купить Premium'}</button>
+                    <button class="settings-btn" id="logoutBtn">🚪 Выйти</button>
+                </div>
+            </div>
+            <button class="profile-mobile-btn" id="profileBtn">👤</button>
+        </div>
+    `;
+    
+    // Мобильное меню
+    let menuBtn = document.getElementById('menuBtn');
+    let profileBtn = document.getElementById('profileBtn');
+    let sidebar = document.getElementById('sidebar');
+    let rightPanel = document.getElementById('rightPanel');
+    let backBtn = document.getElementById('backBtn');
+    
+    if (window.innerWidth <= 768) {
+        if (menuBtn) menuBtn.style.display = 'flex';
+        if (menuBtn) menuBtn.onclick = () => sidebar.classList.toggle('open');
+        if (profileBtn) profileBtn.onclick = () => rightPanel.classList.toggle('open');
+        if (backBtn) backBtn.onclick = () => {
+            if (sidebar.classList.contains('open')) sidebar.classList.remove('open');
+            else if (rightPanel.classList.contains('open')) rightPanel.classList.remove('open');
+            else if (activeChatId) { activeChatId = null; renderApp(); }
+        };
+    }
+    
+    // Список чатов
+    let chatList = document.getElementById('chatList');
+    if (items.length === 0) {
+        chatList.innerHTML = '<div style="color:#6c6c6c; text-align:center; padding:20px;">Нет чатов</div>';
+    } else {
+        chatList.innerHTML = items.map(item => `
+            <div class="chat-item ${activeChatId === item.id ? 'active' : ''}" data-id="${item.id}">
+                <img class="avatar-small" src="https://ui-avatars.com/api/?background=2b5278&color=fff&size=128&name=${item.name?.charAt(0) || 'U'}">
+                <div class="chat-info">
+                    <div class="chat-name">${item.name}</div>
+                    <div class="chat-preview">${item.data?.lastMessage?.substring(0, 30) || 'Нет сообщений'}</div>
+                </div>
+            </div>
+        `).join('');
+    }
+    
+    document.querySelectorAll('.chat-item').forEach(el => {
+        el.onclick = () => {
+            activeChatId = el.dataset.id;
+            renderApp();
+        };
+    });
+    
+    // Сообщения
+    let msgDiv = document.getElementById('messagesList');
+    if (activeChatId) {
+        if (activeMsgs.length === 0) {
+            msgDiv.innerHTML = '<div style="color:#6c6c6c; text-align:center; padding:40px;">💬 Нет сообщений</div>';
+        } else {
+            msgDiv.innerHTML = activeMsgs.map(m => {
+                let isOwn = m.senderId === currentUser.uid;
+                let sender = DB.users.find(u => u.uid === m.senderId);
+                return `
+                    <div class="message ${isOwn ? 'own' : ''}">
+                        ${!isOwn ? `<img src="${sender?.avatar}" style="width:36px;height:36px;border-radius:50%;">` : ''}
+                        <div class="message-bubble">
+                            ${!isOwn ? `<div style="font-size:12px; color:#8e8e8e;">${sender?.username}</div>` : ''}
+                            <div>${escapeHtml(m.text)}</div>
+                            <div class="message-time">${new Date(m.time).toLocaleTimeString()}</div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+        setTimeout(() => {
+            let container = document.querySelector('.messages-container');
+            if (container) container.scrollTop = container.scrollHeight;
+        }, 50);
+    }
+    
+    // Поле ввода
+    let inputWrap = document.getElementById('inputArea');
+    if (activeChatId) {
+        inputWrap.innerHTML = `
+            <button class="icon-btn" id="emojiBtn">😊</button>
+            <input id="msgInput" placeholder="Сообщение...">
+            <button class="icon-btn" id="sendBtn">➤</button>
+        `;
+        let msgInput = document.getElementById('msgInput');
+        let send = () => { sendMessage(activeChatId, msgInput.value); msgInput.value = ''; };
+        document.getElementById('sendBtn')?.onclick = send;
+        msgInput?.addEventListener('keypress', (e) => { if (e.key === 'Enter') send(); });
+        document.getElementById('emojiBtn')?.onclick = () => {
+            let emojis = ['😀','😂','😍','🔥','🎉','❤️','👍'];
+            let pick = prompt(`Эмодзи:\n${emojis.join(' ')}`);
+            if (pick && msgInput) msgInput.value += pick;
+        };
+    } else {
+        inputWrap.innerHTML = '<div style="color:#6c6c6c; padding:12px;">Выберите чат</div>';
+    }
+    
+    // Кнопки
+    document.getElementById('premiumBtn')?.onclick = () => showPremium();
+    document.getElementById('logoutBtn')?.onclick = () => {
+        localStorage.removeItem('spins_session');
+        currentUser = null;
+        location.reload();
+    };
+    document.getElementById('avatarImg')?.onclick = () => {
+        let input = document.createElement('input');
+        input.type = 'file';
+        input.accept = 'image/*';
+        input.onchange = (e) => {
+            let file = e.target.files[0];
+            if (file) {
+                let reader = new FileReader();
+                reader.onload = (ev) => {
+                    currentUser.avatar = ev.target.result;
+                    let idx = DB.users.findIndex(u => u.uid === currentUser.uid);
+                    if (idx !== -1) DB.users[idx].avatar = ev.target.result;
+                    saveDB();
+                    renderApp();
+                };
+                reader.readAsDataURL(file);
+            }
+        };
+        input.click();
+    };
+    document.getElementById('newChatBtn')?.onclick = () => {
+        let username = prompt("Введите username:");
+        if (username) {
+            let user = DB.users.find(u => u.username.toLowerCase() === username.toLowerCase());
+            if (user && user.uid !== currentUser.uid) {
+                let chatId = createChat(currentUser.uid, user.uid);
+                activeChatId = chatId;
+                renderApp();
+            } else {
+                showToast("Пользователь не найден", true);
+            }
+        }
+    };
+    
+    // Поиск
+    let searchInput = document.getElementById('searchInput');
+    let searchResults = document.getElementById('searchResults');
+    if (searchInput) {
+        searchInput.oninput = (e) => {
+            let query = e.target.value.toLowerCase().trim();
+            if (query.length < 1) {
+                searchResults.classList.remove('active');
+                return;
+            }
+            let matched = DB.users.filter(u => u.username.toLowerCase().includes(query) && u.uid !== currentUser.uid);
+            if (matched.length === 0) {
+                searchResults.innerHTML = '<div class="search-result-item">😕 Не найдено</div>';
+                searchResults.classList.add('active');
+                return;
+            }
+            searchResults.innerHTML = matched.map(u => `
+                <div class="search-result-item" data-uid="${u.uid}">
+                    <img src="${u.avatar}" style="width:36px;height:36px;border-radius:50%;">
+                    <div><strong>${escapeHtml(u.username)}</strong></div>
+                </div>
+            `).join('');
+            searchResults.classList.add('active');
+            document.querySelectorAll('.search-result-item[data-uid]').forEach(el => {
+                el.onclick = () => {
+                    let uid = el.dataset.uid;
+                    let user = DB.users.find(u => u.uid === uid);
+                    if (user) {
+                        let chatId = createChat(currentUser.uid, user.uid);
+                        activeChatId = chatId;
+                        renderApp();
+                        searchResults.classList.remove('active');
+                        searchInput.value = '';
+                    }
+                };
+            });
+        };
+    }
+}
+
+function escapeHtml(str) {
+    if (!str) return '';
+    return str.replace(/[&<>]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[m] || m));
+}
+
+// АВТОРИЗАЦИЯ
+function showAuth() {
+    let root = document.getElementById('root');
+    root.innerHTML = `
+        <div style="display:flex; align-items:center; justify-content:center; height:100vh; background:#000;">
+            <div style="background:#1e1e1e; padding:40px; border-radius:28px; width:340px; text-align:center;">
+                <h1 style="color:#fff; margin-bottom:24px;">✨ Spins</h1>
+                <div id="authTabs" style="display:flex; gap:10px; margin-bottom:20px;">
+                    <button id="loginTab" style="flex:1; padding:10px; background:#2b5278; border:none; border-radius:14px; color:#fff;">Вход</button>
+                    <button id="regTab" style="flex:1; padding:10px; background:#1e1e1e; border:none; border-radius:14px; color:#fff;">Регистрация</button>
+                </div>
+                <div id="authForm"></div>
+            </div>
+        </div>
+    `;
+    
+    let mode = 'login';
+    
+    function renderForm() {
+        let formDiv = document.getElementById('authForm');
+        if (mode === 'login') {
+            formDiv.innerHTML = `
+                <input id="loginUser" placeholder="Username" style="width:100%; padding:14px; border-radius:14px; background:#2a2a2a; border:none; color:#fff; margin-bottom:12px;">
+                <input id="loginPass" type="password" placeholder="Пароль" style="width:100%; padding:14px; border-radius:14px; background:#2a2a2a; border:none; color:#fff; margin-bottom:12px;">
+                <button id="doLogin" style="background:#2b5278; width:100%; padding:14px; border:none; border-radius:14px; color:#fff;">Войти</button>
+                <p style="margin-top:16px; color:#6c6c6c;">👑 SpinsAdmin / admin123</p>
+            `;
+            document.getElementById('doLogin')?.onclick = () => {
+                let username = document.getElementById('loginUser').value.trim();
+                let pass = document.getElementById('loginPass').value;
+                let user = DB.users.find(u => u.username === username && u.password === pass);
+                if (user) {
+                    currentUser = user;
+                    localStorage.setItem('spins_session', JSON.stringify({ uid: user.uid }));
+                    renderApp();
+                } else {
+                    showToast("Неверные данные", true);
+                }
+            };
+        } else {
+            formDiv.innerHTML = `
+                <input id="regUser" placeholder="Username (мин 3)" style="width:100%; padding:14px; border-radius:14px; background:#2a2a2a; border:none; color:#fff; margin-bottom:12px;">
+                <input id="regPass" type="password" placeholder="Пароль (мин 4)" style="width:100%; padding:14px; border-radius:14px; background:#2a2a2a; border:none; color:#fff; margin-bottom:12px;">
+                <button id="doReg" style="background:#2b5278; width:100%; padding:14px; border:none; border-radius:14px; color:#fff;">Зарегистрироваться</button>
+            `;
+            document.getElementById('doReg')?.onclick = () => {
+                let username = document.getElementById('regUser').value.trim();
+                let pass = document.getElementById('regPass').value;
+                if (username.length < 3) { showToast("Минимум 3 символа", true); return; }
+                if (pass.length < 4) { showToast("Минимум 4 символа", true); return; }
+                if (DB.users.find(u => u.username === username)) { showToast("Username занят", true); return; }
+                let newUser = {
+                    uid: 'user_' + Date.now(),
+                    username: username,
+                    password: pass,
+                    premium: false,
+                    avatar: 'https://ui-avatars.com/api/?background=2b5278&color=fff&bold=true&size=128&name=' + encodeURIComponent(username),
+                    bio: 'Новый пользователь'
+                };
+                DB.users.push(newUser);
+                saveDB();
+                showToast("Регистрация успешна! Войдите");
+                mode = 'login';
+                document.getElementById('loginTab').style.background = '#2b5278';
+                document.getElementById('regTab').style.background = '#1e1e1e';
+                renderForm();
+            };
+        }
+    }
+    
+    document.getElementById('loginTab').onclick = () => { mode = 'login'; document.getElementById('loginTab').style.background = '#2b5278'; document.getElementById('regTab').style.background = '#1e1e1e'; renderForm(); };
+    document.getElementById('regTab').onclick = () => { mode = 'register'; document.getElementById('regTab').style.background = '#2b5278'; document.getElementById('loginTab').style.background = '#1e1e1e'; renderForm(); };
+    renderForm();
+}
+
+// ЗАПУСК
+let session = localStorage.getItem('spins_session');
+if (session) {
+    try {
+        let data = JSON.parse(session);
+        currentUser = DB.users.find(u => u.uid === data.uid);
+        if (currentUser) renderApp();
+        else showAuth();
+    } catch(e) { showAuth(); }
+} else {
+    showAuth();
+}
+</script>
+</body>
+</html>
