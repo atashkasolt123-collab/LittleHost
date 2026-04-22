@@ -1,0 +1,927 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+    <title>Spins Pro | Мессенджер</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background: #000;
+            height: 100vh;
+            overflow: hidden;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        /* Экран авторизации */
+        .auth-screen {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background: #000;
+            padding: 20px;
+        }
+
+        .auth-card {
+            background: #1e1e1e;
+            padding: 32px;
+            border-radius: 28px;
+            width: 100%;
+            max-width: 340px;
+            text-align: center;
+        }
+
+        .auth-card h1 {
+            color: #fff;
+            margin-bottom: 8px;
+            font-size: 32px;
+        }
+
+        .auth-card p {
+            color: #8e8e8e;
+            margin-bottom: 24px;
+        }
+
+        .auth-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .auth-tab {
+            flex: 1;
+            padding: 10px;
+            border-radius: 14px;
+            border: none;
+            color: #fff;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .auth-tab.active {
+            background: #2b5278;
+        }
+
+        .auth-tab:not(.active) {
+            background: #2a2a2a;
+        }
+
+        .auth-input {
+            width: 100%;
+            padding: 14px;
+            border-radius: 14px;
+            background: #2a2a2a;
+            border: none;
+            color: #fff;
+            margin-bottom: 12px;
+            outline: none;
+            font-size: 16px;
+        }
+
+        .auth-btn {
+            background: #2b5278;
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 14px;
+            color: #fff;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 16px;
+        }
+
+        /* Основное приложение */
+        .app {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background: #0f0f0f;
+        }
+
+        /* Список чатов */
+        .contacts-header {
+            padding: 60px 16px 16px;
+            background: #111;
+            border-bottom: 1px solid #1f1f1f;
+        }
+
+        .contacts-header h1 {
+            font-size: 28px;
+            color: #fff;
+            margin-bottom: 12px;
+        }
+
+        .search-input {
+            background: #1e1e1e;
+            border-radius: 14px;
+            padding: 12px 16px;
+            width: 100%;
+            border: none;
+            color: #fff;
+            font-size: 16px;
+            outline: none;
+        }
+
+        .search-results {
+            background: #1e1e1e;
+            border-radius: 14px;
+            margin-top: 8px;
+            max-height: 300px;
+            overflow-y: auto;
+            display: none;
+        }
+
+        .search-results.show {
+            display: block;
+        }
+
+        .search-item {
+            padding: 14px 16px;
+            cursor: pointer;
+            color: #fff;
+            border-bottom: 0.5px solid #2a2a2a;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .chat-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 8px;
+        }
+
+        .chat-item {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 12px;
+            border-radius: 14px;
+            margin-bottom: 4px;
+            cursor: pointer;
+            background: #111;
+        }
+
+        .chat-item.active {
+            background: #1e1e1e;
+            border-left: 3px solid #2b5278;
+        }
+
+        .avatar {
+            width: 52px;
+            height: 52px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .chat-info {
+            flex: 1;
+        }
+
+        .chat-name {
+            font-weight: 600;
+            color: #fff;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .chat-preview {
+            font-size: 13px;
+            color: #8e8e8e;
+            margin-top: 2px;
+        }
+
+        .badge {
+            background: #2b5278;
+            border-radius: 12px;
+            padding: 2px 8px;
+            font-size: 10px;
+            color: #fff;
+        }
+
+        /* Чат */
+        .chat-header {
+            padding: 12px 16px;
+            background: #111;
+            border-bottom: 1px solid #1f1f1f;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .back-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #1e1e1e;
+            border: none;
+            color: #fff;
+            font-size: 20px;
+            cursor: pointer;
+        }
+
+        .chat-header-title {
+            flex: 1;
+            font-weight: 600;
+            color: #fff;
+            font-size: 17px;
+        }
+
+        .messages-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .message {
+            display: flex;
+            gap: 8px;
+            max-width: 85%;
+        }
+
+        .message.own {
+            align-self: flex-end;
+            flex-direction: row-reverse;
+        }
+
+        .message-bubble {
+            background: #1e1e1e;
+            padding: 10px 14px;
+            border-radius: 18px;
+            color: #fff;
+        }
+
+        .message.own .message-bubble {
+            background: #2b5278;
+        }
+
+        .message-time {
+            font-size: 10px;
+            color: #6c6c6c;
+            margin-top: 4px;
+        }
+
+        .input-area {
+            padding: 10px 16px;
+            background: #111;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            border-top: 1px solid #1f1f1f;
+        }
+
+        .input-area input {
+            flex: 1;
+            background: #1e1e1e;
+            border: none;
+            border-radius: 24px;
+            padding: 12px 18px;
+            color: #fff;
+            font-size: 16px;
+            outline: none;
+        }
+
+        .icon-btn {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: #1e1e1e;
+            border: none;
+            color: #fff;
+            font-size: 20px;
+            cursor: pointer;
+        }
+
+        .profile-panel {
+            position: fixed;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            width: 80%;
+            max-width: 300px;
+            background: #111;
+            z-index: 200;
+            transform: translateX(100%);
+            transition: transform .3s;
+            padding: 60px 20px 20px;
+        }
+
+        .profile-panel.open {
+            transform: translateX(0);
+        }
+
+        .profile-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            margin-bottom: 16px;
+        }
+
+        .profile-name {
+            font-size: 20px;
+            color: #fff;
+            margin-bottom: 8px;
+        }
+
+        .profile-bio {
+            color: #8e8e8e;
+            margin-bottom: 20px;
+        }
+
+        .profile-btn {
+            width: 100%;
+            background: #1e1e1e;
+            border: none;
+            padding: 12px;
+            border-radius: 14px;
+            color: #fff;
+            margin-bottom: 10px;
+            cursor: pointer;
+        }
+
+        .profile-mobile-btn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: #2b5278;
+            border: none;
+            color: #fff;
+            font-size: 24px;
+            cursor: pointer;
+            z-index: 100;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 90px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(30, 30, 30, 0.95);
+            padding: 10px 20px;
+            border-radius: 30px;
+            color: #fff;
+            z-index: 300;
+            font-size: 14px;
+            white-space: nowrap;
+        }
+
+        .screen {
+            display: none;
+        }
+
+        .screen.active {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        .flex-column {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+        }
+    </style>
+</head>
+<body>
+<div id="root"></div>
+
+<script>
+    // ==================== БАЗА ДАННЫХ ====================
+    let DB = {
+        users: [],
+        chats: [],
+        messages: []
+    };
+
+    let currentUser = null;
+    let activeChat = null;
+    let searchResultsVisible = false;
+
+    function loadDB() {
+        DB.users = JSON.parse(localStorage.getItem('spins_users')) || [];
+        DB.chats = JSON.parse(localStorage.getItem('spins_chats')) || [];
+        DB.messages = JSON.parse(localStorage.getItem('spins_messages')) || [];
+    }
+
+    function saveDB() {
+        localStorage.setItem('spins_users', JSON.stringify(DB.users));
+        localStorage.setItem('spins_chats', JSON.stringify(DB.chats));
+        localStorage.setItem('spins_messages', JSON.stringify(DB.messages));
+    }
+
+    function getDefaultAvatar(name) {
+        return `https://ui-avatars.com/api/?background=2b5278&color=fff&bold=true&size=128&rounded=true&name=${encodeURIComponent(name || 'U')}`;
+    }
+
+    function showToast(msg, isErr) {
+        let t = document.createElement('div');
+        t.className = 'toast';
+        t.style.background = isErr ? '#c72a2a' : '#2a2a2a';
+        t.textContent = msg;
+        document.body.appendChild(t);
+        setTimeout(() => t.remove(), 2500);
+    }
+
+    // ==================== ПОЛЬЗОВАТЕЛИ ====================
+    function getAllUsersExceptCurrent() {
+        loadDB();
+        return DB.users.filter(u => u.uid !== currentUser?.uid);
+    }
+
+    function findUserByUsername(username) {
+        loadDB();
+        return DB.users.find(u => u.username.toLowerCase() === username.toLowerCase());
+    }
+
+    function findUserById(uid) {
+        loadDB();
+        return DB.users.find(u => u.uid === uid);
+    }
+
+    // ==================== ЧАТЫ ====================
+    function getOrCreateChat(userA, userB) {
+        loadDB();
+        let existing = DB.chats.find(c => c.participants.includes(userA) && c.participants.includes(userB));
+        if (existing) return existing;
+        
+        const newChat = {
+            id: 'chat_' + Date.now() + '_' + Math.random(),
+            participants: [userA, userB],
+            createdAt: Date.now(),
+            lastMessage: null
+        };
+        DB.chats.push(newChat);
+        saveDB();
+        return newChat;
+    }
+
+    function getUserChats() {
+        loadDB();
+        return DB.chats.filter(c => c.participants.includes(currentUser.uid));
+    }
+
+    function getChatMessages(chatId) {
+        loadDB();
+        return DB.messages.filter(m => m.chatId === chatId).sort((a, b) => a.timestamp - b.timestamp);
+    }
+
+    function sendMessage(chatId, text) {
+        if (!text.trim()) return;
+        loadDB();
+        
+        const newMsg = {
+            id: Date.now() + Math.random(),
+            chatId: chatId,
+            senderId: currentUser.uid,
+            text: text,
+            timestamp: Date.now()
+        };
+        DB.messages.push(newMsg);
+        
+        const chat = DB.chats.find(c => c.id === chatId);
+        if (chat) {
+            chat.lastMessage = text;
+        }
+        
+        saveDB();
+        renderChatScreen();
+    }
+
+    // ==================== РЕГИСТРАЦИЯ ====================
+    function registerUser(username, password) {
+        loadDB();
+        
+        if (username.length < 3) {
+            showToast("❌ Минимум 3 символа", true);
+            return false;
+        }
+        if (password.length < 4) {
+            showToast("❌ Минимум 4 символа", true);
+            return false;
+        }
+        if (DB.users.find(u => u.username === username)) {
+            showToast("❌ Username занят", true);
+            return false;
+        }
+        
+        const newUser = {
+            uid: 'user_' + Date.now() + '_' + Math.random(),
+            username: username,
+            password: password,
+            premium: false,
+            avatar: getDefaultAvatar(username),
+            bio: 'Новый пользователь Spins Pro'
+        };
+        
+        DB.users.push(newUser);
+        saveDB();
+        
+        console.log('✅ Зарегистрирован:', username);
+        console.log('Все пользователи:', DB.users.map(u => u.username));
+        
+        showToast("✅ Регистрация успешна! Войдите");
+        return true;
+    }
+
+    function loginUser(username, password) {
+        loadDB();
+        const user = DB.users.find(u => u.username === username && u.password === password);
+        if (user) {
+            currentUser = user;
+            localStorage.setItem('spins_session', JSON.stringify({ uid: user.uid }));
+            renderContactsScreen();
+            return true;
+        }
+        showToast("❌ Неверный username или пароль", true);
+        return false;
+    }
+
+    // ==================== ОТРИСОВКА ЭКРАНОВ ====================
+    function renderAuthScreen() {
+        const root = document.getElementById('root');
+        let mode = 'login';
+        
+        function renderForm() {
+            const formHtml = mode === 'login' ? `
+                <input type="text" id="loginUsername" class="auth-input" placeholder="Username">
+                <input type="password" id="loginPass" class="auth-input" placeholder="Пароль">
+                <button id="doLoginBtn" class="auth-btn">Войти</button>
+            ` : `
+                <input type="text" id="regUsername" class="auth-input" placeholder="Username (мин 3)">
+                <input type="password" id="regPass" class="auth-input" placeholder="Пароль (мин 4)">
+                <button id="doRegBtn" class="auth-btn">Зарегистрироваться</button>
+            `;
+            
+            document.getElementById('authForm').innerHTML = formHtml;
+            
+            if (mode === 'login') {
+                document.getElementById('doLoginBtn')?.addEventListener('click', () => {
+                    const username = document.getElementById('loginUsername').value.trim();
+                    const pass = document.getElementById('loginPass').value;
+                    loginUser(username, pass);
+                });
+            } else {
+                document.getElementById('doRegBtn')?.addEventListener('click', () => {
+                    const username = document.getElementById('regUsername').value.trim();
+                    const pass = document.getElementById('regPass').value;
+                    if (registerUser(username, pass)) {
+                        mode = 'login';
+                        document.getElementById('loginTab').classList.add('active');
+                        document.getElementById('registerTab').classList.remove('active');
+                        renderForm();
+                    }
+                });
+            }
+        }
+        
+        root.innerHTML = `
+            <div class="auth-screen">
+                <div class="auth-card">
+                    <h1>✨ Spins Pro</h1>
+                    <p>Мессенджер будущего</p>
+                    <div class="auth-tabs">
+                        <button id="loginTab" class="auth-tab active">Вход</button>
+                        <button id="registerTab" class="auth-tab">Регистрация</button>
+                    </div>
+                    <div id="authForm"></div>
+                </div>
+            </div>
+        `;
+        
+        document.getElementById('loginTab').onclick = () => {
+            mode = 'login';
+            document.getElementById('loginTab').classList.add('active');
+            document.getElementById('registerTab').classList.remove('active');
+            renderForm();
+        };
+        document.getElementById('registerTab').onclick = () => {
+            mode = 'register';
+            document.getElementById('registerTab').classList.add('active');
+            document.getElementById('loginTab').classList.remove('active');
+            renderForm();
+        };
+        
+        renderForm();
+    }
+
+    function renderContactsScreen() {
+        const root = document.getElementById('root');
+        const allUsers = getAllUsersExceptCurrent();
+        const chats = getUserChats();
+        
+        // Создаём чаты со всеми пользователями автоматически
+        allUsers.forEach(user => {
+            const existingChat = chats.find(c => c.participants.includes(user.uid));
+            if (!existingChat) {
+                getOrCreateChat(currentUser.uid, user.uid);
+            }
+        });
+        
+        const updatedChats = getUserChats();
+        
+        // Формируем список чатов с именами
+        let chatListHtml = '';
+        for (const chat of updatedChats) {
+            const otherId = chat.participants.find(p => p !== currentUser.uid);
+            const otherUser = findUserById(otherId);
+            if (otherUser) {
+                chatListHtml += `
+                    <div class="chat-item" data-chat-id="${chat.id}">
+                        <img class="avatar" src="${otherUser.avatar}">
+                        <div class="chat-info">
+                            <div class="chat-name">${escapeHtml(otherUser.username)}</div>
+                            <div class="chat-preview">${escapeHtml(chat.lastMessage?.substring(0, 30) || 'Нет сообщений')}</div>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+        
+        root.innerHTML = `
+            <div class="app">
+                <div class="contacts-header">
+                    <h1>Spins Pro</h1>
+                    <input type="text" class="search-input" id="searchInput" placeholder="🔍 Поиск пользователей...">
+                    <div class="search-results" id="searchResults"></div>
+                </div>
+                <div class="chat-list" id="chatList">
+                    ${chatListHtml || '<div style="color:#8e8e8e; text-align:center; padding:40px;">👋 Привет! Найди друзей через поиск</div>'}
+                </div>
+                <button class="profile-mobile-btn" id="profileBtn">👤</button>
+                <div class="profile-panel" id="profilePanel">
+                    <img class="profile-avatar" src="${currentUser.avatar}">
+                    <div class="profile-name">${escapeHtml(currentUser.username)}</div>
+                    <div class="profile-bio">${escapeHtml(currentUser.bio || 'Нет описания')}</div>
+                    <button id="changeUsernameBtn" class="profile-btn">✏️ Сменить username</button>
+                    <button id="changeBioBtn" class="profile-btn">📝 Сменить описание</button>
+                    <button id="logoutBtn" class="profile-btn">🚪 Выйти</button>
+                </div>
+            </div>
+        `;
+        
+        // Клик по чату
+        document.querySelectorAll('.chat-item').forEach(el => {
+            el.addEventListener('click', () => {
+                activeChat = el.dataset.chatId;
+                renderChatScreen();
+            });
+        });
+        
+        // Поиск пользователей
+        const searchInput = document.getElementById('searchInput');
+        const searchResults = document.getElementById('searchResults');
+        
+        searchInput.addEventListener('input', (e) => {
+            const query = e.target.value.toLowerCase().trim();
+            if (query.length < 2) {
+                searchResults.classList.remove('show');
+                return;
+            }
+            
+            loadDB();
+            const found = DB.users.filter(u => 
+                u.username.toLowerCase().includes(query) && 
+                u.uid !== currentUser.uid
+            );
+            
+            if (found.length === 0) {
+                searchResults.innerHTML = '<div class="search-item">😕 Не найдено</div>';
+                searchResults.classList.add('show');
+                return;
+            }
+            
+            searchResults.innerHTML = found.map(u => `
+                <div class="search-item" data-user-id="${u.uid}">
+                    <img src="${u.avatar}" style="width:36px;height:36px;border-radius:50%;">
+                    <div>
+                        <strong>${escapeHtml(u.username)}</strong>
+                        <span style="font-size:12px; color:#8e8e8e;"> ${u.premium ? '⭐' : ''}</span>
+                    </div>
+                </div>
+            `).join('');
+            searchResults.classList.add('show');
+            
+            document.querySelectorAll('.search-item[data-user-id]').forEach(el => {
+                el.addEventListener('click', () => {
+                    const userId = el.dataset.userId;
+                    const user = findUserById(userId);
+                    if (user) {
+                        const chat = getOrCreateChat(currentUser.uid, user.uid);
+                        activeChat = chat.id;
+                        renderChatScreen();
+                        searchResults.classList.remove('show');
+                        searchInput.value = '';
+                    }
+                });
+            });
+        });
+        
+        // Профиль
+        document.getElementById('profileBtn').onclick = () => {
+            document.getElementById('profilePanel').classList.toggle('open');
+        };
+        
+        document.getElementById('changeUsernameBtn').onclick = () => {
+            const newName = prompt("Новый username:", currentUser.username);
+            if (newName && newName.trim().length >= 3) {
+                if (!findUserByUsername(newName.trim())) {
+                    currentUser.username = newName.trim();
+                    currentUser.avatar = getDefaultAvatar(newName.trim());
+                    const idx = DB.users.findIndex(u => u.uid === currentUser.uid);
+                    if (idx !== -1) DB.users[idx] = currentUser;
+                    saveDB();
+                    showToast("✅ Username изменён");
+                    renderContactsScreen();
+                } else {
+                    showToast("❌ Username занят", true);
+                }
+            }
+        };
+        
+        document.getElementById('changeBioBtn').onclick = () => {
+            const newBio = prompt("Новое описание:", currentUser.bio || "");
+            if (newBio !== null) {
+                currentUser.bio = newBio;
+                const idx = DB.users.findIndex(u => u.uid === currentUser.uid);
+                if (idx !== -1) DB.users[idx].bio = newBio;
+                saveDB();
+                showToast("✅ Описание обновлено");
+                renderContactsScreen();
+            }
+        };
+        
+        document.getElementById('logoutBtn').onclick = () => {
+            localStorage.removeItem('spins_session');
+            currentUser = null;
+            renderAuthScreen();
+        };
+    }
+
+    function renderChatScreen() {
+        const root = document.getElementById('root');
+        const chat = DB.chats.find(c => c.id === activeChat);
+        if (!chat) {
+            renderContactsScreen();
+            return;
+        }
+        
+        const otherId = chat.participants.find(p => p !== currentUser.uid);
+        const otherUser = findUserById(otherId);
+        const messages = getChatMessages(activeChat);
+        
+        let messagesHtml = '';
+        for (const msg of messages) {
+            const isOwn = msg.senderId === currentUser.uid;
+            messagesHtml += `
+                <div class="message ${isOwn ? 'own' : ''}">
+                    <div class="message-bubble">
+                        ${!isOwn ? `<div style="font-size:12px; color:#8e8e8e;">${escapeHtml(otherUser?.username)}</div>` : ''}
+                        <div>${escapeHtml(msg.text)}</div>
+                        <div class="message-time">${new Date(msg.timestamp).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        root.innerHTML = `
+            <div class="app">
+                <div class="chat-header">
+                    <button class="back-btn" id="backBtn">←</button>
+                    <div class="chat-header-title">${escapeHtml(otherUser?.username || 'Чат')}</div>
+                    <button class="icon-btn" id="profileBtnInChat">👤</button>
+                </div>
+                <div class="messages-container" id="messagesContainer">
+                    ${messagesHtml || '<div style="color:#8e8e8e; text-align:center; padding:40px;">💬 Напишите первое сообщение!</div>'}
+                </div>
+                <div class="input-area">
+                    <input type="text" id="messageInput" placeholder="Сообщение...">
+                    <button class="icon-btn" id="sendBtn">➤</button>
+                </div>
+                <div class="profile-panel" id="profilePanel">
+                    <img class="profile-avatar" src="${currentUser.avatar}">
+                    <div class="profile-name">${escapeHtml(currentUser.username)}</div>
+                    <div class="profile-bio">${escapeHtml(currentUser.bio || 'Нет описания')}</div>
+                    <button id="changeUsernameBtn" class="profile-btn">✏️ Сменить username</button>
+                    <button id="changeBioBtn" class="profile-btn">📝 Сменить описание</button>
+                    <button id="logoutBtn" class="profile-btn">🚪 Выйти</button>
+                </div>
+            </div>
+        `;
+        
+        // Скролл вниз
+        const container = document.getElementById('messagesContainer');
+        if (container) container.scrollTop = container.scrollHeight;
+        
+        document.getElementById('backBtn').onclick = () => renderContactsScreen();
+        
+        document.getElementById('profileBtnInChat').onclick = () => {
+            document.getElementById('profilePanel').classList.toggle('open');
+        };
+        
+        document.getElementById('sendBtn').onclick = () => {
+            const input = document.getElementById('messageInput');
+            if (input.value.trim()) {
+                sendMessage(activeChat, input.value);
+                input.value = '';
+            }
+        };
+        
+        document.getElementById('messageInput').onkeypress = (e) => {
+            if (e.key === 'Enter') {
+                document.getElementById('sendBtn').click();
+            }
+        };
+        
+        // Функции профиля
+        document.getElementById('changeUsernameBtn').onclick = () => {
+            const newName = prompt("Новый username:", currentUser.username);
+            if (newName && newName.trim().length >= 3) {
+                if (!findUserByUsername(newName.trim())) {
+                    currentUser.username = newName.trim();
+                    currentUser.avatar = getDefaultAvatar(newName.trim());
+                    const idx = DB.users.findIndex(u => u.uid === currentUser.uid);
+                    if (idx !== -1) DB.users[idx] = currentUser;
+                    saveDB();
+                    showToast("✅ Username изменён");
+                    renderChatScreen();
+                } else {
+                    showToast("❌ Username занят", true);
+                }
+            }
+        };
+        
+        document.getElementById('changeBioBtn').onclick = () => {
+            const newBio = prompt("Новое описание:", currentUser.bio || "");
+            if (newBio !== null) {
+                currentUser.bio = newBio;
+                const idx = DB.users.findIndex(u => u.uid === currentUser.uid);
+                if (idx !== -1) DB.users[idx].bio = newBio;
+                saveDB();
+                showToast("✅ Описание обновлено");
+                renderChatScreen();
+            }
+        };
+        
+        document.getElementById('logoutBtn').onclick = () => {
+            localStorage.removeItem('spins_session');
+            currentUser = null;
+            renderAuthScreen();
+        };
+    }
+
+    function escapeHtml(str) {
+        if (!str) return '';
+        return str.replace(/[&<>]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[m] || m));
+    }
+
+    // ==================== ЗАПУСК ====================
+    loadDB();
+    
+    // Создаём админа atashkas если нет
+    if (!DB.users.find(u => u.username === 'atashkas')) {
+        DB.users.push({
+            uid: 'admin_atashkas',
+            username: 'atashkas',
+            password: 'atashkas123',
+            premium: true,
+            avatar: getDefaultAvatar('atashkas'),
+            bio: '👑 Владелец Spins Pro'
+        });
+        saveDB();
+        console.log('✅ Создан админ atashkas');
+    }
+    
+    const session = localStorage.getItem('spins_session');
+    if (session) {
+        try {
+            const data = JSON.parse(session);
+            currentUser = DB.users.find(u => u.uid === data.uid);
+            if (currentUser) {
+                renderContactsScreen();
+            } else {
+                renderAuthScreen();
+            }
+        } catch(e) {
+            renderAuthScreen();
+        }
+    } else {
+        renderAuthScreen();
+    }
+</script>
+</body>
+</html>
